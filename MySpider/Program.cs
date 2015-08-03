@@ -15,6 +15,8 @@ namespace MySpider
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            Spider sp = new Spider();
+            sp.FetchPage("http://www.kanunu8.com/");
             Application.Run(new Form1());
         }
     }
