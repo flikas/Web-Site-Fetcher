@@ -23,7 +23,7 @@ namespace MySpider
             StreamReader tr = new StreamReader(s);
             string buf = tr.ReadToEnd();
             System.Diagnostics.Debug.Print("Content:{0}", buf);
-
+            
             HtmlDocument hd = new HtmlDocument();
             hd.LoadHtml(buf);
             XPathNavigator xn = hd.CreateNavigator();
