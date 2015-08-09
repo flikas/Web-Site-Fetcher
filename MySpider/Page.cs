@@ -1,6 +1,7 @@
 ﻿using HtmlAgilityPack;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -12,22 +13,28 @@ namespace MySpider
 
     class Resource
     {
-        public Resource(Uri resUri)
+        public Resource(Uri resUri, Page parent)
         {
             this.Url = resUri;
             this.Content = null;
             this.Loaded = false;
+            this.Parent = parent;
         }
         public Uri Url { get; protected set; }
         public byte[] Content { get; protected set; }
+        public string ContentType { get; protected set; }
         public bool Loaded { get; protected set; }
         public ResourceType Type { get; protected set; }
+        public Page Parent { get; protected set; }
+
+        public event EventHandler LoadOK;
 
         public void Load(byte[] content, string contentType)
         {
             if (this.Content == null)
             {
                 this.Content = content;
+                this.ContentType = contentType;
                 if (contentType.Contains("html"))
                 {
                     this.Type = ResourceType.Page;
@@ -37,18 +44,24 @@ namespace MySpider
                     this.Type = ResourceType.Resource;
                 }
                 this.Loaded = true;
+                this.LoadOK(this, new EventArgs());
             }
             else
             {
                 throw new InvalidOperationException();
             }
         }
+
+        public void SaveToDisk()
+        {
+            Debug.WriteLine("SAVE:: {0}, {1}, {2}", this.ContentType, this.Content.Length, this.Url.ToString());
+        }
     }
 
     class Page : Resource
     {
-        Page(Resource r)
-            : base(r.Url)
+        public Page(Resource r)
+            : base(r.Url, r.Parent)
         {
             if (!r.Loaded)
             {
@@ -77,8 +90,8 @@ namespace MySpider
                     XPathNavigator xn_attr = xn.Clone();
                     if (xn_attr.MoveToAttribute("href", xn.NamespaceURI))
                     {
-                        System.Diagnostics.Debug.Print("GotLink:{0}", xn_attr.Value);
-                        this.Resources.Add(new Resource(new Uri(this.Url, xn_attr.Value)));
+                        //Debug.Print("GotLink:{0}", xn_attr.Value);
+                        this.Resources.Add(new Resource(new Uri(this.Url, xn_attr.Value), this));
                     }
                 }
             }
